@@ -2,11 +2,11 @@
 
 Minimal reproduction for a Fast Refresh / HMR bug in TanStack Start's RSC mode.
 
-## Reproduce
+## Reproduce (vite — bug)
 
 ```bash
 pnpm install
-pnpm dev   # http://localhost:3000
+pnpm dev:vite   # http://localhost:3000
 ```
 
 1. Open http://localhost:3000.
@@ -20,6 +20,20 @@ pnpm dev   # http://localhost:3000
 For contrast, move `getServerData` (the `createServerFn`) into its own file and
 import it back into `index.tsx`: HMR then works and the heading updates while the
 counter is preserved.
+
+## rsbuild — not affected
+
+The same app runs under the rsbuild adapter from the identical `src/`:
+
+```bash
+pnpm dev:rsbuild   # http://localhost:3000
+```
+
+Doing the same edit Fast Refreshes correctly — the heading updates and the
+counter is preserved. rsbuild's RSC mode uses rspack + `@rsbuild/plugin-react`
+Fast Refresh and has no equivalent of the `@vitejs/plugin-rsc` client
+`hotUpdate` guard, so the bug is **vite-only**. This corroborates that the fix
+belongs in `@vitejs/plugin-rsc`, not in TanStack Start's shared code.
 
 ## Root cause (already diagnosed)
 
@@ -36,6 +50,7 @@ Proposed fix upstream: https://github.com/vitejs/vite-plugin-react/pull/1248
 ## Versions
 
 - `@tanstack/react-start` ^1.168.25
-- `@vitejs/plugin-rsc` ^0.5.27
+- `@vitejs/plugin-rsc` ^0.5.27 (vite lane)
+- `@rsbuild/core` ^2 + `@rsbuild/plugin-react` ^2 (rsbuild lane)
 - `vite` ^8
 - `react` 19
